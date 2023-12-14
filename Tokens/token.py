@@ -1,4 +1,6 @@
 import pygame
+from Tokens.mistake_learning import Model
+
 class Token:
 
     def __init__(self, x, y, w, h):
@@ -30,17 +32,20 @@ class Player(Token):
     def __init__(self):
         super().__init__(100, 100, 40, 100)
         self.speed = 10
-    
+        self.AI = Model()
+
     def update(self):
 
         self.velocity.x = 0
         keys = pygame.key.get_pressed()
+        
+        move = self.AI.get_move()
 
-        if keys[pygame.K_a]:
+        if move == 'A':
             self.velocity.x = -self.speed 
-        if keys[pygame.K_d]:
+        if move == 'D':
             self.velocity.x = self.speed
-        if keys[pygame.K_w] and self.is_on_ground:
+        if move == 'W' and self.is_on_ground:
             self.velocity.y = -25
 
         if self.is_on_ground and self.velocity.y >= 1:
@@ -54,6 +59,13 @@ class Player(Token):
                 self.velocity.y = 7
 
         self.is_on_ground = False
+
+        if self.hitbox.y > 1200:
+            self.respawn()
+
+    def respawn(self):
+        self.hitbox.y = 100
+        self.hitbox.x = 100 
 
     def render(self, g):
         pygame.draw.rect(g, (255, 0, 0), self.hitbox)

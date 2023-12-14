@@ -6,15 +6,19 @@ SCREEN_HEIGHT = 1000
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 clock = pygame.time.Clock()
 running = True
+camera_active = False
 
-tokens = [Player(), Platform(-800, 650, 300, 200), Platform(-500, 700, 64, 64), Platform(-436, 700, 64, 64),
-          Platform(-372,700,64,64), Platform(-308, 700, 64, 64), Platform(-244,764,64,64),
-          Platform(-180, 828,64,64), Platform(-116,828,64,64), Platform(-52,828,64,64),
-          Platform(12,828,64,64), Platform(76,828,64,64), Platform(140,828,64,64),
-          Platform(204,828,64,64), Platform(264,828,1536,64), Platform(1600, 810,300,200)]
+tokens = [Player()]
 dt = 0
 camera_scroll_speed = 1
 half_camera_boundry = 200
+
+def load_jump_level(jump_size: int):
+    
+    width = 500
+    tokens.append(Platform(0, 500, width, 500))
+    tokens.append(Platform(jump_size + width, 500, width, 500))
+
 
 def get_all_collisions(movable):
     
@@ -63,6 +67,22 @@ def handle_camera():
     else:
         print("main.py/handle_camera !! DEBUG:  Player is not index 0")
 
+def get_player():
+    if(isinstance(tokens[0], Player)):
+        return tokens[0]
+    else:
+        print("main.py/handle_camera !! DEBUG:  Player is not index 0")
+
+# ---------------------------------------------------
+# INTIALISE
+#---------------------------------------------------
+
+load_jump_level(200)
+goal_x = 800
+goal_y = 300
+# --------------------------------------------------
+# LOOP
+# --------------------------------------------------
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -73,10 +93,20 @@ while running:
     for token in tokens:
         token.update()
     
-    handle_camera()
+    if camera_active:
+        handle_camera()
     
+    pos_x1 = get_player().hitbox.x
+    pos_y1 = get_player().hitbox.y
+
     for token in tokens:
         move(token)
+
+    pos_x2 = get_player().hitbox.x
+    pos_y2 = get_player().hitbox.y
+
+    dist_x = abs(pos_x2 - goal_x) - abs(pos_x1 - goal_x)
+    dist_y = abs(pos_y2 - goal_y) - abs(pos_y1 - goal_y)
 
     for token in tokens:
         token.render(screen)
@@ -84,6 +114,8 @@ while running:
     for token in reversed(tokens):
         if token.is_dead():
             tokens.remove(token)
+    
+    get_player().AI.feedback(dist_x + dist_y)
 
     pygame.display.flip()
     dt = clock.tick(60) / 1000
